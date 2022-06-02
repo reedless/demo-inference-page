@@ -47,16 +47,18 @@ fetch('GVT999.txt', {mode: 'no-cors'})
             };
             images[i].src = `data:image/png;base64,${data[tests[i].toLowerCase()].attempts.slice(-1)[0].image}`;
 
-            fetch(`http://127.0.0.1:5000/predict/${tests[i]}`, {
-                method: "POST",
-                body: JSON.stringify({ image: data[tests[i].toLowerCase()].attempts.slice(-1)[0].image })
-            }).then(res => {
-                return res.json()
-            }).then(data => {
-                console.log(data);
-                document.getElementById(`prediction-${i}-number`).innerHTML = data.result;
-            }).catch(err => {
-                console.log("Request failed!", err);
-            });
+
+            
+            // fetch(`http://127.0.0.1:5000/predict/${tests[i]}`, {
+            //     method: "POST",
+            //     body: JSON.stringify({ image: data[tests[i].toLowerCase()].attempts.slice(-1)[0].image })
+            // }).then(res => {
+            //     return res.json()
+            // }).then(data => {
+            //     console.log(data);
+            //     document.getElementById(`prediction-${i}-number`).innerHTML = data.result;
+            // }).catch(err => {
+            //     console.log("Request failed!", err);
+            // });
         }
     })
