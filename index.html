@@ -5,13 +5,20 @@
 
   <body>
     <div class="card elevation">
+
       <canvas
         class="canvas elevation"
         id="canvas-0"
-        width="280"
-        height="280"
+        width="256"
+        height="256"
       ></canvas>
 
+      <canvas
+        class="canvas elevation"
+        id="canvas-0-processed"
+        width="256"
+        height="256"
+      ></canvas>
 
       <div class="predictions">
         <div class="prediction-col" id="prediction-0">
@@ -21,13 +28,20 @@
     </div>
 
     <div class="card elevation">
+
         <canvas
           class="canvas elevation"
           id="canvas-1"
-          width="280"
-          height="280"
+          width="256"
+          height="256"
         ></canvas>
-  
+
+        <canvas
+          class="canvas elevation"
+          id="canvas-1-processed"
+          width="256"
+          height="256"
+        ></canvas>
   
         <div class="predictions">
           <div class="prediction-col" id="prediction-1">
@@ -37,13 +51,20 @@
     </div>
 
     <div class="card elevation">
+        
         <canvas
           class="canvas elevation"
           id="canvas-2"
-          width="280"
-          height="280"
+          width="256"
+          height="256"
         ></canvas>
-  
+
+        <canvas
+          class="canvas elevation"
+          id="canvas-2-processed"
+          width="256"
+          height="256"
+        ></canvas>
   
         <div class="predictions">
           <div class="prediction-col" id="prediction-2">
@@ -53,13 +74,20 @@
     </div>
 
     <div class="card elevation">
+        
         <canvas
           class="canvas elevation"
           id="canvas-3"
-          width="280"
-          height="280"
+          width="256"
+          height="256"
         ></canvas>
-  
+
+        <canvas
+          class="canvas elevation"
+          id="canvas-3-processed"
+          width="256"
+          height="256"
+        ></canvas>
   
         <div class="predictions">
           <div class="prediction-col" id="prediction-3">
@@ -68,6 +96,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/onnxjs/dist/onnx.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

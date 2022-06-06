@@ -30,18 +30,18 @@ def remove_transparency(im, bg_colour=(255, 255, 255)):
 
 def trim_whitespace(image_torch):    
     left = 0
-    while left < image_torch.shape[1] and len(image_torch[:,left].unique()) == 1:
+    while left < image_torch.size(1) and len(image_torch[:,left].unique()) == 1:
         left += 1
 
-    right = image_torch.shape[1]-1
+    right = image_torch.size(1) - 1
     while right > 0 and len(image_torch[:,right].unique()) == 1:
         right -= 1
 
     top = 0
-    while top < image_torch.shape[0] and len(image_torch[top,:].unique()) == 1:
+    while top < image_torch.size(0) and len(image_torch[top,:].unique()) == 1:
         top += 1
 
-    bottom = image_torch.shape[0]-1
+    bottom = image_torch.size(0) - 1
     while bottom > 0 and len(image_torch[bottom,:].unique()) == 1:
         bottom -= 1
         
@@ -74,24 +74,27 @@ class WrapperModel(torch.nn.Module):
 
 
       def forward(self, input):
-            image_torch_crop = trim_whitespace(input).unsqueeze(0)
-            image_torch_resize = resize(image_torch_crop, (256, 256))
+            # [256, 256, 4] to [4, 256, 256]
+            input = input.permute(2, 0, 1)
 
-            im_tensor = 255 - image_torch_resize.unsqueeze(0)
+            # [4, 256, 256] to [256, 256]
+            image_torch_resize = torch.sum(input, dim=0) / 4
+
+            im_tensor = 255 - image_torch_resize
             kernel_tensor = torch.ones((1, 1, 3, 3))
-            torch_result = torch.clamp(torch.nn.functional.conv2d(im_tensor, kernel_tensor, padding ='same', dilation=2), 0, 255)
+            im_tensor = im_tensor.unsqueeze(0).unsqueeze(0)
+            torch_result = torch.clamp(torch.nn.functional.conv2d(im_tensor, kernel_tensor, padding=2, dilation=2), 0, 255)
             torch_result = 255 - torch_result
 
-            _, predicted_label = torch.max(self.model(torch_result[0][0]), 1)
-            return predicted_label
+            return self.model(torch_result[0][0])
 
 def check_models_work(device):
     with open('GVT999.txt') as file:
         one_sample = file.readlines()
 
     tests = ['Complex', 'Polygon', 'Clock', 'Memory']
-
     for test in tests:
+        # load sample and remove transparency
         b64_str = json.loads(one_sample[0])[test.lower()]['attempts'][-1]['image']
         base64_decoded = base64.b64decode(b64_str)
         image = Image.open(io.BytesIO(base64_decoded))
@@ -99,23 +102,27 @@ def check_models_work(device):
         image_np = np.array(im)
         image_torch = torch.tensor(image_np).float()
 
-        model = WrapperModel(device, test)
+        # crop and resize
+        image_torch_crop = trim_whitespace(image_torch).unsqueeze(0)
+        image_torch_resize = resize(image_torch_crop, (256, 256))
 
+        # stack it to mimic 4 channel image
+        image_torch_resize = torch.cat([image_torch_resize, image_torch_resize, image_torch_resize, image_torch_resize]).permute(1, 2, 0)
+
+        model = WrapperModel(device, test)
         model.eval()
 
-        print(model(image_torch))
+        print(model(image_torch_resize))
+
 
 def build_all_models(device):
-    return
-# script_model = torch.jit.script(model)
-# script_model_opt = optimize_for_mobile(script_model)
-
-# # Read the live.spec.json file and embed it into the model file.
-# spec = Path("live.spec.json").read_text()
-# extra_files = {}
-# extra_files["model/live.spec.json"] = spec
-# script_model_opt._save_for_lite_interpreter("model_with_spec.ptl", _extra_files=extra_files)
-
+    tests = ['Complex', 'Polygon', 'Clock', 'Memory']
+    for test in tests:
+        model = WrapperModel(device, test)
+        model.eval()
+        
+        dummy_input = torch.zeros((256, 256, 4))
+        torch.onnx.export(model, dummy_input, 'onnx_model.onnx', verbose=True)
 
 
 if __name__ == '__main__':
