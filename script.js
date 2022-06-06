@@ -28,9 +28,6 @@ const processed_contexts = [ctx0_processed, ctx1_processed, ctx2_processed, ctx3
 
 const tests = ['Complex', 'Polygon', 'Clock', 'Memory']
 
-const sess = new onnx.InferenceSession();
-const loadingModelPromise = sess.loadModel("./onnx_model.onnx");
-
 // Add 'Loading...' to the canvas.
 for (let i = 0; i < contexts.length; i++) {
     contexts[i].font = "28px sans-serif";
@@ -100,30 +97,26 @@ fetch('GVT999.txt', {mode: 'no-cors'})
         }
 
         const imgData = processed_contexts[0].getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-        const input = new onnx.Tensor(new Float32Array(imgData.data), "float32", [CANVAS_SIZE, CANVAS_SIZE, 4]);
 
-        loadingModelPromise.then(() => {
-            predict(input);
-        });
+        predict(imgData);
     })
 
-async function predict(input) {
-    console.log(input)
-    const inputs = [input]
-    console.log(inputs.length)
-
-    const outputMap = await sess.run(inputs);
-    const outputTensor = outputMap.values().next().value;
-    const predictions = outputTensor.data;
-    const maxPrediction = Math.max(...predictions);
-    console.log(maxPrediction)
+async function predict(imgData) {
+    const session = await ort.InferenceSession.create('./onnx_model.onnx');
     
-    // for (let i = 0; i < predictions.length; i++) {
-    //     const element = document.getElementById(`prediction-${i}`);
-    //     element.children[0].children[0].style.height = `${predictions[i] * 100}%`;
-    //     element.className =
-    //     predictions[i] === maxPrediction
-    //         ? "prediction-col top-prediction"
-    //         : "prediction-col";
-    // }
+    const input = new ort.Tensor('float32', new Float32Array(imgData.data), [CANVAS_SIZE, CANVAS_SIZE, 4]);
+    
+    const feeds = { 0: input };
+    
+    const results = await session.run(feeds);
+    console.log(results)
+
+    const resultsArr = results['76'].data
+
+    const maxPrediction = resultsArr.indexOf(Math.max(...resultsArr));
+    console.log(maxPrediction)
+
+    document.getElementById(`prediction-0-number`).innerHTML = maxPrediction;
+    // document.getElementById(`prediction-${i}-number`).innerHTML = data.result;
+
 }
